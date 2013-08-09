@@ -1,4 +1,5 @@
-Conference-Mobile-App-2013
-==========================
+##Welcome to Wakanda##
 
-Conference Mobile App created with Wakanda 5.0 and jQuery Mobile 1.3.2
+This is the place to describe your Wakanda application.
+
+Please visit [www.wakanda.org](http://www.wakanda.org "wakanda.org") for more information.
