@@ -1,1 +1,0 @@
-﻿ds.session.forEach(	 function( emp ) {	 	if (emp.ID > 22) {     	   console.log();    	}    });
