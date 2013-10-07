@@ -31,25 +31,51 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 	button2.click = function button2_click (event)// @startlock
 	{// @endlock
 		if(attendeeObj.email)
-		sources.attendee.query("email = :1", attendeeObj.email,{
-        onSuccess: function(){
-				if(sources.attendee.length == 0 ) {
-					debugger;
-					sources.attendee.addNewElement();
-					sources.attendee.fullName = attendeeObj.name;
-					sources.attendee.email = attendeeObj.email;
-					sources.attendee.save();
+		sources.attendee1.query("email = :1", attendeeObj.email,{
+	        onSuccess: function(){
+				if(sources.attendee1.length == 0 ) {
+					//sources.attendee.all({
+						//onSuccess: function(event) {
+							sources.attendee.addNewElement();
+							debugger;
+							sources.attendee.serverRefresh({
+								onSuccess: function(event) {
+									sources.attendee.fullName = attendeeObj.name;
+									sources.attendee.email = attendeeObj.email;
+									sources.attendee.save({
+										onSuccess: function(){
+											debugger;
+											sources.answers.attendee.set(sources.attendee);
+											sources.answers.survey.set(sources.survey);
+											sources.answers.save();
+											$$('button1').hide();
+											$$('button2').hide();
+											console.log("answer saved");
+										},
+										onError: function(error){
+											debugger;
+										}
+									});
+								},
+								onError: function(error){
+											debugger;
+										}
+							});
+						//}
+					//});
 				}
-				sources.answers.attendee.set(sources.attendee);
-				debugger;
-            }
+				else {
+				sources.answers.attendee.set(sources.attendee1);
+				sources.answers.survey.set(sources.survey);
+				sources.answers.save();
+				$$('button1').hide();
+				$$('button2').hide();
+				console.log("answer saved");
+				}
+	    	}
         });
 		
-		sources.answers.survey.set(sources.survey);
-		sources.answers.save();
-		$$('button1').hide();
-		$$('button2').hide();
-		console.log("answer saved");
+		
 	};// @lock
 
 	documentEvent.onLoad = function documentEvent_onLoad (event)// @startlock

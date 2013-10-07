@@ -5,21 +5,25 @@ guidedModel =// @startlock
 	{
 		events :
 		{
-			onInit:function()
-			{// @endlock
-				this.ID = generateUUID();
-				debugger;
-			}// @startlock
-		}
-	},
-	Answer :
-	{
-		events :
-		{
 			onSave:function()
 			{// @endlock
-				//console.log(this.attendeeName);
+				if (this.fullName != null & this.firstName == null){
+					debugger
+					var names = this.fullName.split(" ");
+					this.firstName = names[0];
+					this.lastName = names[1];
+				}
 			}// @startlock
+		},
+		uniqueID :
+		{
+			events :
+			{
+				onInit:function(attributeName)
+				{// @endlock
+					this.uniqueID = generateUUID();
+				}// @startlock
+			}
 		}
 	}
 };// @endlock

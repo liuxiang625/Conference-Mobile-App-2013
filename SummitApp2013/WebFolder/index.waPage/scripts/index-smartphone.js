@@ -14,7 +14,7 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 				html += '<li role="heading" data-role="list-divider">' + htmlEncode(elem.sessionDateString) + '</li>';
 			}
 			html += '<li id = "'+ htmlEncode(elem. __KEY) +'" data-theme="c">';
-			if(elem.isActivity != true) html += '<a href="#page4" data-transition="slide">';
+			if(elem.isActivity != true) html += '<a href="#page4" data-transition="slide" >';
 			html += '<h1 class="ui-li-heading">'+ htmlEncode(elem.title) +'</h1>';
 			html += '<p class="ui-li-desc">'+ htmlEncode(elem.startTimeString) +'- '+ htmlEncode(elem.endTimeString) + ', ' + htmlEncode(elem.room) +'</p>';
 			if(elem.isActivity != true) html += '</a>';
@@ -28,21 +28,41 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 	
 	documentEvent.onLoad = function documentEvent_onLoad (event)// @startlock
 	{// @endlock
+		//tap event handler to load session detail
 		$( "#sessionListview li" ).live( "tap", function() {
-//		  $( "#sessionListview li" ).removeClass('ui-btn-active ui-state-persist');
-//		  $(this).addClass('ui-btn-active ui-state-persist');
 		  var sessionId = this.id;
 		  ds.Session.find("ID = " + sessionId , {
-		  			//autoExpand:'ID_Company_3_',
+		  			autoExpand:'presentaors',
 		   			onSuccess: function(findEvent) {
-		   				console.log(findEvent.entity);
+		   				var spkeaerListHTML = '';
 		   				var sessionEntity = findEvent.entity;
-		   				$('#sessionDetailDiv h3')[0].innerHTML = sessionEntity.title.getValue();
-		   				$('#sessionDetailDiv div p span')[0].innerHTML = sessionEntity.sessionDateString.getValue() + ', ' + sessionEntity.startTimeString.getValue() + '- ' 
+		   				
+		   				$('#sessionDetailTitleDiv h3')[0].innerHTML = sessionEntity.title.getValue();
+		   				$('#sessionDetailTitleDiv div p span')[0].innerHTML = sessionEntity.sessionDateString.getValue() + ', ' + sessionEntity.startTimeString.getValue() + '- ' 
 		   																 + sessionEntity.endTimeString.getValue() + ', ' + sessionEntity.room.getValue();
+		   				$('#sessionDescrption p')[0].innerHTML = sessionEntity.description.getValue();//Load session description
+			
+						//build speakers list
+		   				sessionEntity.presentaors.getValue().forEach({  
+					        onSuccess: function(presentorEvent)
+					        {
+					            var presentor = presentorEvent.entity; // get the entity from event.entity
+					            spkeaerListHTML += '<li data-theme="c"><a id="'+ presentor.speaker.relKey +'" href="#page5" data-transition="slide">Speaker: '+ presentor.speakerName.getValue() +'</a></li>'
+							}
+					    });
+						$('#sessionSpeakersList')[0].innerHTML = spkeaerListHTML;
 		   			}
 		   		});
-		  ;
+		});
+		
+		$( '#page4' ).live( 'pageshow',function(event, ui){
+		  $('#sessionSpeakersList').listview('refresh');
+		});
+
+		// tap event handler to load speak's profile
+		$( "#sessionSpeakersList li" ).live( "tap", function() {
+			
+		
 		});
 		
 		//Get all sessions and build the list
