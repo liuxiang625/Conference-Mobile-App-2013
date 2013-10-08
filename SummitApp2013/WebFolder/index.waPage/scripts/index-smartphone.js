@@ -1,4 +1,11 @@
-﻿
+﻿var pageNotInit = true;
+$(document).live('pageinit',function(event){//Force the app to go home after force refresh the page on browser
+	if(pageNotInit){
+		$.mobile.changePage($('#page2'));
+		pageNotInit = false;
+	}	
+});
+
 WAF.onAfterInit = function onAfterInit() {// @lock
 
 // @region namespaceDeclaration// @startlock
@@ -6,6 +13,7 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 // @endregion// @endlock
 
 // eventHandlers// @lock
+	
 	function buildSessionListView(arr) {
 		var html = "";
 
@@ -13,7 +21,7 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 			if(elem.title.indexOf("Registration") != -1){
 				html += '<li role="heading" data-role="list-divider">' + htmlEncode(elem.sessionDateString) + '</li>';
 			}
-			html += '<li id = "'+ htmlEncode(elem. __KEY) +'" data-theme="c">';
+			html += '<li id = "'+ htmlEncode(elem. __KEY) +'" data-theme="c" class = "loadSessionDetail" >';
 			if(elem.isActivity != true) html += '<a href="#page4" data-transition="slide" >';
 			html += '<h1 class="ui-li-heading">'+ htmlEncode(elem.title) +'</h1>';
 			html += '<p class="ui-li-desc">'+ htmlEncode(elem.startTimeString) +'- '+ htmlEncode(elem.endTimeString) + ', ' + htmlEncode(elem.room) +'</p>';
@@ -22,19 +30,24 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 		});
 		var listview = document.getElementById('sessionListview');
 		listview.innerHTML = html;
-		$('#sessionListview').listview('refresh');
+		if ($('#sessionListview').hasClass('ui-listview')) $('#sessionListview').listview('refresh');
 	}
 	
+	
+	$(".goPrevious").live('tap', function() {//go to previous page in history
+				history.back();
+				return false;
+	});
 	
 	documentEvent.onLoad = function documentEvent_onLoad (event)// @startlock
 	{// @endlock
 		//tap event handler to load session detail
-		$( "#sessionListview li" ).live( "tap", function() {
+		$( ".loadSessionDetail" ).live( "tap", function() {
 		  var sessionId = this.id;
 		  ds.Session.find("ID = " + sessionId , {
 		  			autoExpand:'presentaors',
 		   			onSuccess: function(findEvent) {
-		   				var spkeaerListHTML = '';
+		   				var speakerListHTML = '';
 		   				var sessionEntity = findEvent.entity;
 		   				
 		   				$('#sessionDetailTitleDiv h3')[0].innerHTML = sessionEntity.title.getValue();
@@ -47,10 +60,10 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 					        onSuccess: function(presentorEvent)
 					        {
 					            var presentor = presentorEvent.entity; // get the entity from event.entity
-					            spkeaerListHTML += '<li data-theme="c"><a id="'+ presentor.speaker.relKey +'" href="#page5" data-transition="slide">Speaker: '+ presentor.speakerName.getValue() +'</a></li>'
+					            speakerListHTML += '<li data-theme="c" id="'+ presentor.speaker.relKey +'"><a  href="#page5" data-transition="slide">Speaker: '+ presentor.speakerName.getValue() +'</a></li>'
 							}
 					    });
-						$('#sessionSpeakersList')[0].innerHTML = spkeaerListHTML;
+						$('#sessionSpeakersList')[0].innerHTML = speakerListHTML;
 		   			}
 		   		});
 		});
@@ -61,9 +74,32 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 
 		// tap event handler to load speak's profile
 		$( "#sessionSpeakersList li" ).live( "tap", function() {
-			
-		
+			var speakerId = this.id;
+			var sessionListHTML = '';
+			 ds.Speaker.find("ID = " + speakerId , {
+		  			autoExpand:'presentations',
+		   			onSuccess: function(findSpeakerEvent) {
+		   				var speakerEntity = findSpeakerEvent.entity;
+		   				$('#speakerName h2 span')[0].innerHTML = speakerEntity.fullName.getValue();
+		   				$('#speakerName h3 span')[0].innerHTML = speakerEntity.title.getValue() + " at " + speakerEntity.company.getValue();
+		   				$('#speakerBio p')[0].innerHTML = speakerEntity.biography.getValue();
+		   				
+		   				//build speakers' session list
+		   				speakerEntity.presentations.getValue().forEach({  
+					        onSuccess: function(presentationEvent)
+					        {
+					            var presentation = presentationEvent.entity; // get the entity from event.entity
+					            sessionListHTML += '<li data-theme="c" id="'+ presentation.session.relKey +'" class = "loadSessionDetail"><a  href="#page4" data-transition="slide">Speaker: '+ presentation.sessionName.getValue() +'</a></li>'
+							}
+					    });
+						$('#speakersSessionsList')[0].innerHTML = sessionListHTML;
+		   			}
+		   	 });
 		});
+		$( '#page5' ).live( 'pageshow',function(event, ui){
+		  $('#speakersSessionsList').listview('refresh');
+		});
+		
 		
 		//Get all sessions and build the list
 		ds.Session.query("", {
