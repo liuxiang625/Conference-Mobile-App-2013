@@ -1,11 +1,11 @@
 ﻿//Take user to home page on reload
-//var pageNotInit = true;
-//$(document).live('pageinit',function(event){//Force the app to go home after force refresh the page on browser
-//	if(pageNotInit){
-//		$.mobile.changePage($('#page2'));
-//		pageNotInit = false;
-//	}	
-//});
+var pageNotInit = true;
+$(document).live('pageinit',function(event){//Force the app to go home after force refresh the page on browser
+	if(pageNotInit){
+		$.mobile.changePage($('#page2'));
+		pageNotInit = false;
+	}	
+});
 var evalAnswers = {
 		fullName:'',
 		email:'',
@@ -91,7 +91,6 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 						}
 					},
 					onError: function(error) {
-						debugger;
 					}
 				});
 
@@ -100,6 +99,8 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 				autoExpand:'presentaors',
 				onSuccess: function(findEvent) {
 					var speakerListHTML = '';
+					var evalSpeakListHTML = '';
+					
 					var sessionEntity = findEvent.entity;
 					
 					$('#sessionDetailTitleDiv h3')[0].innerHTML = sessionEntity.title.getValue();
@@ -113,17 +114,26 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 			        {
 			            var presentor = presentorEvent.entity; // get the entity from event.entity
 			            speakerListHTML += '<li data-theme="c" id="'+ presentor.speaker.relKey +'"><a  href="#page5" data-transition="slide">Speaker: '+ presentor.speakerName.getValue() +'</a></li>'
+						//Build the dropdown for later eval
+						evalSpeakListHTML += '<option value="'+ presentor.speakerName.getValue() +'">'+ presentor.speakerName.getValue() +'</option>'
 					}
 			    });
 				$('#sessionSpeakersList')[0].innerHTML = speakerListHTML;
+				$('#evalSpeakerList')[0].innerHTML = evalSpeakListHTML;
 				}
 			});
 		});
 		
 		$( '#page4' ).live( 'pageshow',function(event, ui){
-		  $('#sessionSpeakersList').listview('refresh');
+		  	$('#sessionSpeakersList').listview('refresh');
 		});
-
+		$( '#page7' ).live( 'pageshow',function(event, ui){
+		  	$('#evalSpeakerList').selectmenu('refresh', true);
+		});
+		$( '#page5' ).live( 'pageshow',function(event, ui){
+		  	$('#speakersSessionsList').listview('refresh');
+		});
+		
 		// tap event handler to load speak's profile
 		$( "#sessionSpeakersList li" ).live( "tap", function() {
 			var speakerId = this.id;
@@ -148,13 +158,9 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 		   			}
 		   	 });
 		});
-		$( '#page5' ).live( 'pageshow',function(event, ui){
-		  $('#speakersSessionsList').listview('refresh');
-		});
 		
 		//Go to eval page and start eval 
 		$(".startEval").live( "tap", function(event, ui) {
-			debugger;
 			if(attendee) {
 				evalAnswers.email = attendee.email.getValue();
 				evalAnswers.fullName = attendee.fullName.getValue();
@@ -163,10 +169,11 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 			ds.Survey.find('session.ID = ' + sessionId, {
 				onSuccess: function(findSurveyEvent) {
 					sessionSurvey = findSurveyEvent.entity;
-					$.mobile.changePage($('#page7'));
+					$.mobile.changePage($('#page7'), {
+						transition: "slideup"
+					});
 				},
 				onError: function(error){
-								debugger;
 				}
 			});
 		});
@@ -187,21 +194,20 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 			newEval.answer7.setValue(evalAnswers.answer7);
 			newEval.survey.setValue(sessionSurvey);
 			
-			debugger;
 			if(evalAnswers.email)
 			ds.Attendee.find("email = :1", evalAnswers.email,{
 				 onSuccess: function(findAttendeeEvent){
 				 	
 				 	if(findAttendeeEvent.entity) {
 				 		newEval.attendee.setValue(findAttendeeEvent.entity);
-				 		debugger;
 						newEval.save({
 					        onSuccess:function(event)
 					        {	
-					        	debugger;
 					        	$('#startEvalButton span span')[0].innerHTML = "Evaluation Saved";
 					        	$("#startEvalButton").addClass('ui-disabled');
-					        	$.mobile.changePage($('#page4'));
+					        	$.mobile.changePage($('#page4'), {
+											transition: "slidedown"
+								});
 					        }
 					    });					
 				 	}
@@ -212,20 +218,19 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 						newAttendee.uniqueID.setValue(cookieID);
 						newAttendee.save({
 							onSuccess: function(attendeeEvent){
-								debugger;
 								newEval.attendee.setValue(attendeeEvent.entity);
 								newEval.save({
 							        onSuccess:function(event)
 							        {	
-							        	debugger;
 							        	$('#startEvalButton span span')[0].innerHTML = "Evaluation Submitted";
 							        	$("#startEvalButton").addClass('ui-disabled');
-							        	$.mobile.changePage($('#page4'));
+							        	$.mobile.changePage($('#page4'), {
+											transition: "slidedown"
+										});
 							        }
 							    });		
 							},
 							onError: function(error){
-								debugger;
 							}
 						});
 				 	}
