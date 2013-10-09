@@ -20,7 +20,7 @@ guidedModel =// @startlock
 			{
 				onInit:function(attributeName)
 				{// @endlock
-					this.uniqueID = generateUUID();
+					//this.uniqueID = generateUUID();
 				}// @startlock
 			}
 		}

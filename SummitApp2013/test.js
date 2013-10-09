@@ -1,0 +1,1 @@
+﻿ds.Attendee.find('email == :1', 'A8');

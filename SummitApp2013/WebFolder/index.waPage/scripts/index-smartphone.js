@@ -56,33 +56,68 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 	
 	documentEvent.onLoad = function documentEvent_onLoad (event)// @startlock
 	{// @endlock
+		// Set attendee's name and email in cookie for future authentication 
+		var CookieDate = new Date;
+		CookieDate.setFullYear(CookieDate.getFullYear( ) +10);
+		if(document.cookie.indexOf("SummitAPPID") == -1) {
+			document.cookie = 'SummitAPPID = ' + uniqueid() + ';expires=' + CookieDate.toGMTString() + ';';
+		}
+		var beginIndex = document.cookie.indexOf("SummitAPPID")+12;
+		var endIndex = beginIndex + 32;
+		var cookieID = document.cookie.substring(beginIndex,endIndex);
+		
 		var sessionSurvey = {};
 		var sessionId = '';
+		var attendee = {};
+		ds.Attendee.find('uniqueID == ' + cookieID ,{
+			onSuccess: function(locatAttendeeEvent) {
+				attendee = locatAttendeeEvent.entity;
+			}
+		});
+		
 		//tap event handler to load session detail
 		$( ".loadSessionDetail" ).live( "tap", function() {
-		  sessionId = this.id;
-		  ds.Session.find("ID = " + sessionId , {
-		  			autoExpand:'presentaors',
-		   			onSuccess: function(findEvent) {
-		   				var speakerListHTML = '';
-		   				var sessionEntity = findEvent.entity;
-		   				
-		   				$('#sessionDetailTitleDiv h3')[0].innerHTML = sessionEntity.title.getValue();
-		   				$('#sessionDetailTitleDiv div p span')[0].innerHTML = sessionEntity.sessionDateString.getValue() + ', ' + sessionEntity.startTimeString.getValue() + '- ' 
-		   																 + sessionEntity.endTimeString.getValue() + ', ' + sessionEntity.room.getValue();
-		   				$('#sessionDescrption p')[0].innerHTML = sessionEntity.description.getValue();//Load session description
-			
-						//build speakers list
-		   				sessionEntity.presentaors.getValue().forEach({  
-					        onSuccess: function(presentorEvent)
-					        {
-					            var presentor = presentorEvent.entity; // get the entity from event.entity
-					            speakerListHTML += '<li data-theme="c" id="'+ presentor.speaker.relKey +'"><a  href="#page5" data-transition="slide">Speaker: '+ presentor.speakerName.getValue() +'</a></li>'
-							}
-					    });
-						$('#sessionSpeakersList')[0].innerHTML = speakerListHTML;
-		   			}
-		   		});
+			sessionId = this.id;
+			if(attendee) {
+				ds.Answer.find('attendeeEmail = :1', attendee.email.getValue(), {
+					onSuccess: function(findAttendeeeAnswerEvent) {
+						if (findAttendeeeAnswerEvent.entity && findAttendeeeAnswerEvent.entity.sessionID.getValue() == sessionId){
+							$('#startEvalButton span span')[0].innerHTML = "Evaluation Submitted";
+							$("#startEvalButton").addClass('ui-disabled');
+						}
+						else {
+							$('#startEvalButton span span')[0].innerHTML = "Evaluate this Session";
+							$("#startEvalButton").removeClass('ui-disabled');
+						}
+					},
+					onError: function(error) {
+						debugger;
+					}
+				});
+
+			}
+			ds.Session.find("ID = " + sessionId , {
+				autoExpand:'presentaors',
+				onSuccess: function(findEvent) {
+					var speakerListHTML = '';
+					var sessionEntity = findEvent.entity;
+					
+					$('#sessionDetailTitleDiv h3')[0].innerHTML = sessionEntity.title.getValue();
+					$('#sessionDetailTitleDiv div p span')[0].innerHTML = sessionEntity.sessionDateString.getValue() + ', ' + sessionEntity.startTimeString.getValue() + '- ' 
+																	 + sessionEntity.endTimeString.getValue() + ', ' + sessionEntity.room.getValue();
+					$('#sessionDescrption p')[0].innerHTML = sessionEntity.description.getValue();//Load session description
+
+					//build speakers list
+					sessionEntity.presentaors.getValue().forEach({  
+			        onSuccess: function(presentorEvent)
+			        {
+			            var presentor = presentorEvent.entity; // get the entity from event.entity
+			            speakerListHTML += '<li data-theme="c" id="'+ presentor.speaker.relKey +'"><a  href="#page5" data-transition="slide">Speaker: '+ presentor.speakerName.getValue() +'</a></li>'
+					}
+			    });
+				$('#sessionSpeakersList')[0].innerHTML = speakerListHTML;
+				}
+			});
 		});
 		
 		$( '#page4' ).live( 'pageshow',function(event, ui){
@@ -157,28 +192,21 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 				 	if(findAttendeeEvent.entity) {
 				 		newEval.attendee.setCalue(findAttendeeEvent.entity);
 				 		debugger;
-//				 		newAttendee.save({
-//							onSuccess: function(){
-//								debugger;
-								newEval.save({
-							        onSuccess:function(event)
-							        {	
-							        	debugger;
-							        	$('#startEvalButton span span')[0].innerHTML = "Evaluation Saved";
-							        	$("#startEvalButton").addClass('ui-disabled');
-							        	$.mobile.changePage($('#page4'));
-							        }
-							    });					
-//							},
-//							onError: function(error){
-//								debugger;
-//							}
-						//});
+						newEval.save({
+					        onSuccess:function(event)
+					        {	
+					        	debugger;
+					        	$('#startEvalButton span span')[0].innerHTML = "Evaluation Saved";
+					        	$("#startEvalButton").addClass('ui-disabled');
+					        	$.mobile.changePage($('#page4'));
+					        }
+					    });					
 				 	}
 				 	else {
 				 		var newAttendee = ds.Attendee.newEntity();
 						newAttendee.fullName.setValue(evalAnswers.fullName);
 						newAttendee.email.setValue(evalAnswers.email);
+						newAttendee.uniqueID.setValue(cookieID);
 						newAttendee.save({
 							onSuccess: function(attendeeEvent){
 								debugger;
@@ -187,7 +215,7 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 							        onSuccess:function(event)
 							        {	
 							        	debugger;
-							        	$('#startEvalButton span span')[0].innerHTML = "Evaluation Saved";
+							        	$('#startEvalButton span span')[0].innerHTML = "Evaluation Submitted";
 							        	$("#startEvalButton").addClass('ui-disabled');
 							        	$.mobile.changePage($('#page4'));
 							        }
@@ -219,7 +247,21 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 			}
 		});
 	};// @lock
+	//Utility: Generates UniqueID for cookie and localstorage
+	function uniqueid(){
+	    // always start with a letter (for DOM friendlyness)
+	    var idstr=String.fromCharCode(Math.floor((Math.random()*25)+65));
+	    do {                
+	        // between numbers and characters (48 is 0 and 90 is Z (42-48 = 90)
+	        var ascicode=Math.floor((Math.random()*42)+48);
+	        if (ascicode<58 || ascicode>64){
+	            // exclude all chars between : (58) and @ (64)
+	            idstr+=String.fromCharCode(ascicode);    
+	        }                
+	    } while (idstr.length<32);
 
+	    return (idstr);
+	}
 // @region eventManager// @startlock
 	WAF.addListener("document", "onLoad", documentEvent.onLoad, "WAF");
 // @endregion
