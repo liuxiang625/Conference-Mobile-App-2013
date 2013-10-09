@@ -8,7 +8,6 @@ guidedModel =// @startlock
 			onSave:function()
 			{// @endlock
 				if (this.fullName != null & this.firstName == null){
-					debugger
 					var names = this.fullName.split(" ");
 					this.firstName = names[0];
 					this.lastName = names[1];

@@ -1,11 +1,24 @@
-﻿var pageNotInit = true;
-$(document).live('pageinit',function(event){//Force the app to go home after force refresh the page on browser
-	if(pageNotInit){
-		$.mobile.changePage($('#page2'));
-		pageNotInit = false;
-	}	
-});
-
+﻿//Take user to home page on reload
+//var pageNotInit = true;
+//$(document).live('pageinit',function(event){//Force the app to go home after force refresh the page on browser
+//	if(pageNotInit){
+//		$.mobile.changePage($('#page2'));
+//		pageNotInit = false;
+//	}	
+//});
+var evalAnswers = {
+		fullName:'',
+		email:'',
+		speakerName:'',
+		answer1:'',
+		answer2:'',
+		answer3:'',
+		answer4:'',
+		answer5:'',
+		answer6:'',
+		answer7:''
+	}
+	
 WAF.onAfterInit = function onAfterInit() {// @lock
 
 // @region namespaceDeclaration// @startlock
@@ -13,6 +26,8 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 // @endregion// @endlock
 
 // eventHandlers// @lock
+	//Global var to hold the eval
+	
 	
 	function buildSessionListView(arr) {
 		var html = "";
@@ -41,9 +56,11 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 	
 	documentEvent.onLoad = function documentEvent_onLoad (event)// @startlock
 	{// @endlock
+		var sessionSurvey = {};
+		var sessionId = '';
 		//tap event handler to load session detail
 		$( ".loadSessionDetail" ).live( "tap", function() {
-		  var sessionId = this.id;
+		  sessionId = this.id;
 		  ds.Session.find("ID = " + sessionId , {
 		  			autoExpand:'presentaors',
 		   			onSuccess: function(findEvent) {
@@ -100,8 +117,95 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 		  $('#speakersSessionsList').listview('refresh');
 		});
 		
+		//Go to eval page and start eval 
+		$(".startEval").live( "tap", function(event, ui) {
+			debugger;
+			ds.Survey.find('session.ID = ' + sessionId, {
+				onSuccess: function(findSurveyEvent) {
+					debugger;
+					sessionSurvey = findSurveyEvent.entity;
+					$.mobile.changePage($('#page7'));
+				},
+				onError: function(error){
+								debugger;
+				}
+			});
+		});
 		
-		//Get all sessions and build the list
+		$( ".answerInput" ).bind( "change", function(event, ui) {
+			evalAnswers[this.name] = this.value;
+		});
+		
+		//Set survey and attendee while saving the eval
+		$( ".saveEval" ).bind( "tap", function(event, ui) {
+			var newEval = ds.Answer.newEntity();
+			newEval.answer1.setValue(evalAnswers.answer1);
+			newEval.answer2.setValue(evalAnswers.answer2);
+			newEval.answer3.setValue(evalAnswers.answer3);
+			newEval.answer4.setValue(evalAnswers.answer4);
+			newEval.answer5.setValue(evalAnswers.answer5);
+			newEval.answer6.setValue(evalAnswers.answer6);
+			newEval.answer7.setValue(evalAnswers.answer7);
+			newEval.survey.setValue(sessionSurvey);
+			
+			debugger;
+			console.log(newEval);
+			if(evalAnswers.email)
+			ds.Attendee.find("email = :1", evalAnswers.email,{
+				 onSuccess: function(findAttendeeEvent){
+				 	
+				 	if(findAttendeeEvent.entity) {
+				 		newEval.attendee.setCalue(findAttendeeEvent.entity);
+				 		debugger;
+//				 		newAttendee.save({
+//							onSuccess: function(){
+//								debugger;
+								newEval.save({
+							        onSuccess:function(event)
+							        {	
+							        	debugger;
+							        	$('#startEvalButton span span')[0].innerHTML = "Evaluation Saved";
+							        	$("#startEvalButton").addClass('ui-disabled');
+							        	$.mobile.changePage($('#page4'));
+							        }
+							    });					
+//							},
+//							onError: function(error){
+//								debugger;
+//							}
+						//});
+				 	}
+				 	else {
+				 		var newAttendee = ds.Attendee.newEntity();
+						newAttendee.fullName.setValue(evalAnswers.fullName);
+						newAttendee.email.setValue(evalAnswers.email);
+						newAttendee.save({
+							onSuccess: function(attendeeEvent){
+								debugger;
+								newEval.attendee.setValue(attendeeEvent.entity);
+								newEval.save({
+							        onSuccess:function(event)
+							        {	
+							        	debugger;
+							        	$('#startEvalButton span span')[0].innerHTML = "Evaluation Saved";
+							        	$("#startEvalButton").addClass('ui-disabled');
+							        	$.mobile.changePage($('#page4'));
+							        }
+							    });		
+							},
+							onError: function(error){
+								debugger;
+							}
+						});
+				 	}
+				 }
+			});
+
+		});
+
+		
+		
+		//Get all sessions and build the session list
 		ds.Session.query("", {
 			pageSize:1,
 			orderBy:"ID",
