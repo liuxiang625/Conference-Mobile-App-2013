@@ -155,9 +155,13 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 		//Go to eval page and start eval 
 		$(".startEval").live( "tap", function(event, ui) {
 			debugger;
+			if(attendee) {
+				evalAnswers.email = attendee.email.getValue();
+				evalAnswers.fullName = attendee.fullName.getValue();
+				$('#attendeeInfo').hide();
+			}
 			ds.Survey.find('session.ID = ' + sessionId, {
 				onSuccess: function(findSurveyEvent) {
-					debugger;
 					sessionSurvey = findSurveyEvent.entity;
 					$.mobile.changePage($('#page7'));
 				},
@@ -184,13 +188,12 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 			newEval.survey.setValue(sessionSurvey);
 			
 			debugger;
-			console.log(newEval);
 			if(evalAnswers.email)
 			ds.Attendee.find("email = :1", evalAnswers.email,{
 				 onSuccess: function(findAttendeeEvent){
 				 	
 				 	if(findAttendeeEvent.entity) {
-				 		newEval.attendee.setCalue(findAttendeeEvent.entity);
+				 		newEval.attendee.setValue(findAttendeeEvent.entity);
 				 		debugger;
 						newEval.save({
 					        onSuccess:function(event)
@@ -240,7 +243,6 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 			onSuccess: function(e) {
 				e.entityCollection.toArray("title,isActivity,room,startTimeString,endTimeString,sessionDateString", {
 					onSuccess: function(e2) {
-						console.log(e2.result);
 						buildSessionListView(e2.result);
 					}
 				});
