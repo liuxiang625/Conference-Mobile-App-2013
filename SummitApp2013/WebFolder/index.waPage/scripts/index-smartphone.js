@@ -261,8 +261,23 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 
 		});
 
+		$("#sessionsDateList").bind( "change", function(event, ui) {
+			var dataString = this.value;
+			ds.Session.query("sessionDateString == :1",dataString, {
+			pageSize:1,
+			orderBy:"ID",
+			onSuccess: function(e) {
+				e.entityCollection.toArray("title,isActivity,room,startTimeString,endTimeString,sessionDateString", {
+					onSuccess: function(e2) {
+						buildSessionListView(e2.result);
+					}
+				});
+			}
+		});
+			
+		});
 		
-		
+
 		//Get all sessions and build the session list
 		ds.Session.query("", {
 			pageSize:1,
