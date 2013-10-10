@@ -34,7 +34,25 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 
 		arr.forEach(function(elem) {
 			if(elem.title.indexOf("Registration") != -1){
-				html += '<li role="heading" data-role="list-divider">' + htmlEncode(elem.sessionDateString) + '</li>';
+				var dayString = '';
+				switch(elem.sessionDateString) {
+					case '10/15/2013':
+						dayString = 'Tuesday'
+						break
+					case '10/16/2013':
+						dayString = 'Wednesday'
+						break
+					case '10/17/2013':
+						dayString = 'Thursday'
+						break
+					case '10/18/2013':
+						dayString = 'Friday'
+						break	
+					case '10/19/2013':
+						dayString = 'Saturday'
+						break
+				}
+				html += '<li role="heading" data-role="list-divider">' + htmlEncode(elem.sessionDateString) + '  ' + dayString + '</li>';
 			}
 			html += '<li id = "'+ htmlEncode(elem. __KEY) +'" data-theme="c" class = "loadSessionDetail" >';
 			if(elem.isActivity != true) html += '<a href="#page4" data-transition="slide" >';
@@ -136,12 +154,14 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 		
 		// tap event handler to load speak's profile
 		$( "#sessionSpeakersList li" ).live( "tap", function() {
+			///images/speakerImages/sergiy-temnikov.jpg
 			var speakerId = this.id;
 			var sessionListHTML = '';
 			 ds.Speaker.find("ID = " + speakerId , {
 		  			autoExpand:'presentations',
 		   			onSuccess: function(findSpeakerEvent) {
 		   				var speakerEntity = findSpeakerEvent.entity;
+		   				if(speakerEntity.picURL.getValue()) $('#speakerImage')[0].src = "/images/speakerImages/" + speakerEntity.picURL.getValue();
 		   				$('#speakerName h2 span')[0].innerHTML = speakerEntity.fullName.getValue();
 		   				$('#speakerName h3 span')[0].innerHTML = speakerEntity.title.getValue() + " at " + speakerEntity.company.getValue();
 		   				$('#speakerBio p')[0].innerHTML = speakerEntity.biography.getValue();
@@ -194,7 +214,7 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 			newEval.answer7.setValue(evalAnswers.answer7);
 			newEval.survey.setValue(sessionSurvey);
 			
-			if(evalAnswers.email)
+			if(evalAnswers.fullName & validateEmail(evalAnswers.email))
 			ds.Attendee.find("email = :1", evalAnswers.email,{
 				 onSuccess: function(findAttendeeEvent){
 				 	
@@ -236,6 +256,8 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 				 	}
 				 }
 			});
+			else
+			!validateEmail(evalAnswers.email)?alert('Please enter a Valid email!'):alert('Please enter a Valid name!')
 
 		});
 
@@ -269,6 +291,12 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 
 	    return (idstr);
 	}
+	
+	//Utility: Validate Email using regx
+	function validateEmail(email) { 
+	    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	    return re.test(email);
+	} 
 // @region eventManager// @startlock
 	WAF.addListener("document", "onLoad", documentEvent.onLoad, "WAF");
 // @endregion
