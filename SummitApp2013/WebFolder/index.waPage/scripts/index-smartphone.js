@@ -263,7 +263,7 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 
 		$("#sessionsDateList").bind( "change", function(event, ui) {
 			var dataString = this.value;
-			ds.Session.query("sessionDateString == :1",dataString, {
+			ds.Session.query("sessionDateString begin :1",dataString, {
 			pageSize:1,
 			orderBy:"ID",
 			onSuccess: function(e) {
