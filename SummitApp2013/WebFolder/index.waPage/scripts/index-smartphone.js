@@ -2,7 +2,7 @@
 var pageNotInit = true;
 $(document).live('pageinit',function(event){//Force the app to go home after force refresh the page on browser
 	if(pageNotInit){
-		$.mobile.changePage($('#page2'));
+		$.mobile.changePage($('#page1'));
 		pageNotInit = false;
 	}	
 });
@@ -212,9 +212,10 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 			newEval.answer5.setValue(evalAnswers.answer5);
 			newEval.answer6.setValue(evalAnswers.answer6);
 			newEval.answer7.setValue(evalAnswers.answer7);
+			newEval.speakerName.setValue($('#evalSpeakerList')[0].value);
 			newEval.survey.setValue(sessionSurvey);
 			
-			if(evalAnswers.fullName & validateEmail(evalAnswers.email))
+			if(evalAnswers.fullName && validateEmail(evalAnswers.email))
 			ds.Attendee.find("email = :1", evalAnswers.email,{
 				 onSuccess: function(findAttendeeEvent){
 				 	
