@@ -97,22 +97,27 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 		$( ".loadSessionDetail" ).live( "tap", function() {
 			sessionId = this.id;
 			if(attendee) {
-				ds.Answer.find('attendeeEmail == ' + attendee.email.getValue(), {
-					autoExpand: "attendee",
-					onSuccess: function(findAttendeeeAnswerEvent) {
-						if (findAttendeeeAnswerEvent.entity && findAttendeeeAnswerEvent.entity.sessionID.getValue() == sessionId){
-							$('#startEvalButton span span')[0].innerHTML = "Evaluation Submitted";
-							$("#startEvalButton").addClass('ui-disabled');
-						}
-						else {
-							$('#startEvalButton span span')[0].innerHTML = "Evaluate this Session";
-							$("#startEvalButton").removeClass('ui-disabled');
-						}
+				ds.Answer.query('sessionID == :1 ', sessionId, {
+					autoExpand:'attendee',
+					onSuccess: function(findAnswerEvent) {
+						findAnswerEvent.entityCollection.toArray('attendeeEmail', {
+							onSuccess: function(findAttendeeeAnswerEvent) {
+								var answersArr = findAttendeeeAnswerEvent.result;
+								$('#startEvalButton span span')[0].innerHTML = "Evaluate this Session";
+								$("#startEvalButton").removeClass('ui-disabled');
+								answersArr.forEach(function(elem) { 
+								if (elem.attendeeEmail == attendee.email.getValue()){
+									$('#startEvalButton span span')[0].innerHTML = "Evaluation Submitted";
+									$("#startEvalButton").addClass('ui-disabled');
+								}
+								});
+							}
+						});
 					},
 					onError: function(error) {
+						console.log(error.error[0]);
 					}
 				});
-
 			}
 			ds.Session.find("ID = " + sessionId , {
 				autoExpand:'presentaors',
@@ -129,16 +134,16 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 
 					//build speakers list
 					sessionEntity.presentaors.getValue().forEach({  
-			        onSuccess: function(presentorEvent)
-			        {
-			            var presentor = presentorEvent.entity; // get the entity from event.entity
-			            speakerListHTML += '<li data-theme="c" id="'+ presentor.speaker.relKey +'"><a  href="#page5" data-transition="slide">Speaker: '+ presentor.speakerName.getValue() +'</a></li>'
-						//Build the dropdown for later eval
-						evalSpeakListHTML += '<option value="'+ presentor.speakerName.getValue() +'">'+ presentor.speakerName.getValue() +'</option>'
-					}
-			    });
-				$('#sessionSpeakersList')[0].innerHTML = speakerListHTML;
-				$('#evalSpeakerList')[0].innerHTML = evalSpeakListHTML;
+				        onSuccess: function(presentorEvent)
+				        {
+				            var presentor = presentorEvent.entity; // get the entity from event.entity
+				            speakerListHTML += '<li data-theme="c" id="'+ presentor.speaker.relKey +'"><a  href="#page5" data-transition="slide">Speaker: '+ presentor.speakerName.getValue() +'</a></li>'
+							//Build the dropdown for later eval
+							evalSpeakListHTML += '<option value="'+ presentor.speakerName.getValue() +'">'+ presentor.speakerName.getValue() +'</option>'
+						}
+				    });
+					$('#sessionSpeakersList')[0].innerHTML = speakerListHTML;
+					$('#evalSpeakerList')[0].innerHTML = evalSpeakListHTML;
 				}
 			});
 		});
