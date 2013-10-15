@@ -1,0 +1,1 @@
+﻿function rejectDataBrowser(request, response) {    response.statusCode = 301; // Moved Permanently	response.headers.Location = 'http://c.4d.com';}

@@ -97,7 +97,8 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 		$( ".loadSessionDetail" ).live( "tap", function() {
 			sessionId = this.id;
 			if(attendee) {
-				ds.Answer.find('attendeeEmail = :1', attendee.email.getValue(), {
+				ds.Answer.find('attendeeEmail == ' + attendee.email.getValue(), {
+					autoExpand: "attendee",
 					onSuccess: function(findAttendeeeAnswerEvent) {
 						if (findAttendeeeAnswerEvent.entity && findAttendeeeAnswerEvent.entity.sessionID.getValue() == sessionId){
 							$('#startEvalButton span span')[0].innerHTML = "Evaluation Submitted";
