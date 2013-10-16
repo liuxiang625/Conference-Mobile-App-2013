@@ -14,6 +14,12 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 		source.answers.addNewElement();
 		
 		//Init radio button group valuee;
+		attendeeObj = {
+			name:'',
+			email:'',
+			anynomous:'false'
+		}
+		source.attendeeObj.sync();
 		source.answers.answer1 = 5;
 		source.answers.answer2 = 5;
 		source.answers.answer3 = 5;
@@ -34,35 +40,28 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 		sources.attendee1.query("email = :1", attendeeObj.email,{
 	        onSuccess: function(){
 				if(sources.attendee1.length == 0 ) {
-					//sources.attendee.all({
-						//onSuccess: function(event) {
-							sources.attendee.addNewElement();
-							debugger;
-							sources.attendee.serverRefresh({
-								onSuccess: function(event) {
-									sources.attendee.fullName = attendeeObj.name;
-									sources.attendee.email = attendeeObj.email;
-									sources.attendee.save({
-										onSuccess: function(){
-											debugger;
-											sources.answers.attendee.set(sources.attendee);
-											sources.answers.survey.set(sources.survey);
-											sources.answers.save();
-											$$('button1').hide();
-											$$('button2').hide();
-											console.log("answer saved");
-										},
-										onError: function(error){
-											debugger;
-										}
-									});
+					sources.attendee.addNewElement();
+					sources.attendee.serverRefresh({
+						onSuccess: function(event) {
+							sources.attendee.fullName = attendeeObj.name;
+							sources.attendee.email = attendeeObj.email;
+							sources.attendee.save({
+								onSuccess: function(){
+									sources.answers.attendee.set(sources.attendee);
+									sources.answers.survey.set(sources.survey);
+									sources.answers.save();
+									$$('button1').hide();
+									$$('button2').hide();
+									console.log("answer saved");
 								},
 								onError: function(error){
-											debugger;
-										}
+								}
 							});
-						//}
-					//});
+						},
+						onError: function(error){
+								
+						}
+					});
 				}
 				else {
 				sources.answers.attendee.set(sources.attendee1);
