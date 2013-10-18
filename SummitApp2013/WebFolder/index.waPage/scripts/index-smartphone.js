@@ -210,6 +210,7 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 		
 		//Set survey and attendee while saving the eval
 		$( ".saveEval" ).bind( "tap", function(event, ui) {
+			$(".saveEval").addClass('ui-disabled');
 			var newEval = ds.Answer.newEntity();
 			newEval.answer1.setValue(evalAnswers.answer1);
 			newEval.answer2.setValue(evalAnswers.answer2);
@@ -235,6 +236,7 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 					        	$.mobile.changePage($('#page4'), {
 											transition: "slidedown"
 								});
+								$(".saveEval").removeClass('ui-disabled');
 					        }
 					    });					
 				 	}
@@ -254,6 +256,7 @@ WAF.onAfterInit = function onAfterInit() {// @lock
 							        	$.mobile.changePage($('#page4'), {
 											transition: "slidedown"
 										});
+										$(".saveEval").removeClass('ui-disabled');
 							        }
 							    });		
 							},
